@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+################################################################################
+#
+# AAX to M4B Converter
+#
+# This script converts Audible AAX audio files to M4B format using FFmpeg.
+# Before using this script, you must provide your activation bytes, which can be obtained from Audible.
+# The script accepts command-line options to specify the input file and output file name.
+#
+# Requirements:
+#     ffmpeg
+#
+# Usage:
+#     ./aax2m4b.sh [-o OUTPUT] FILE.aax
+#     ./aax2m4b.sh --help
+#
+# Options:
+#     -h, --help          Show this message and exit.
+#     -o, --output        Specify output file name [default: same name as input file with .m4b extension].
+#
+################################################################################
+
+
+## CLI OPTIONS #################################################################
+
+# Parse command line options
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+
+    case $key in
+        -h|--help)
+        echo "Usage: $0 [-o OUTPUT] FILE.aax"
+        exit 0
+        ;;
+        -o|--output)
+        OUT_FILE="$2"
+        shift
+        shift
+        ;;
+        *)
+        if [[ -z "${IN_FILE}" ]]; then
+            IN_FILE=$1
+        else
+            echo "ERROR: Only one input file can be provided. Use --help option for usage." 1>&2
+            exit 1
+        fi
+        shift
+        ;;
+    esac
+done
+
+if [[ -z "${IN_FILE}" ]]; then
+  echo "ERROR: Input file not provided. Use --help option for usage." 1>&2
+  exit 1
+fi
+
+if [[ ! -f "${IN_FILE}" ]]; then
+  echo "ERROR: Input file does not exist." 1>&2
+  exit 1
+fi
+
+## CHECK ACTIVATION BYTES #####################################################
+
+# Get home directory of the current user
+HOME_DIR=~
+
+# Check if activation file exists
+ACTIVATION_FILE="$HOME_DIR/.config/aax2m4b/activation_bytes.txt"
+
+if [ ! -f "$ACTIVATION_FILE" ]; then
+
+    # Prompt user for activation bytes
+    read -p "Enter your activation bytes: " ACTIVATION_BYTES
+    
+    # Create the directory if it does not exist
+    mkdir -p "$HOME_DIR/.config/aax2m4b"
+    
+    # Create the file and set suitable permissions
+    touch "$ACTIVATION_FILE"
+    chmod 600 "$ACTIVATION_FILE"
+
+    # Write the activation bytes to the file
+    echo "$ACTIVATION_BYTES" >> "$ACTIVATION_FILE"
+    
+else
+
+    # Read the bytes.
+    ACTIVATION_BYTES=$(cat "$ACTIVATION_FILE")
+
+fi
+
+## CONVERT FILE ################################################################
+
+# Determine output file name
+if [[ -z "${OUT_FILE}" ]]; then
+  OUT_FILE="$(basename -s .aax "${IN_FILE}").m4b"
+fi
+
+# Check that the input file is an .aax file
+if [ ${IN_FILE: -4} != ".aax" ]; then
+    echo "ERROR: '${IN_FILE}' is not an .aax file." 1>&2
+    exit 1
+fi
+
+# Convert the file
+ffmpeg -activation_bytes "$ACTIVATION_BYTES" -i "$IN_FILE" -c copy "$OUT_FILE"
+
+# Check that the output file was created successfully
+if [ $? -ne 0 ]; then
+  echo "ERROR: Failed to convert file." 1>&2
+  exit 1
+fi
+
+echo "Conversion complete. Output file: $OUT_FILE"
