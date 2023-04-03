@@ -10,5 +10,5 @@ The options available for the script are:
 To use the script:
 
 ```bash
-./aax2m4b.sh [-o OUTPUT] FILE.aax
+aax2m4b [-o OUTPUT] FILE.aax
 ```
