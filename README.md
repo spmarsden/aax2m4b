@@ -1,6 +1,6 @@
 # aax2m4b
 
-Converts audible aax audio files to m4b format using ffmpeg. Before running the script the user must provide their activation bytes which are obtained from Audible. The script accepts command-line options to specify the input file and output file name.
+Converts audible aax audio files to m4b format using ffmpeg. Before running the script the user must provide their activation bytes. The script accepts command-line options to specify the input file and output file name.
 
 ## Installation
 
